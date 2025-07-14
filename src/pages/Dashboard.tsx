@@ -1,15 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Shield, Users, MapPin, Lightbulb } from 'lucide-react';
+import { LogOut, Shield, Users, MapPin, Lightbulb, ExternalLink } from 'lucide-react';
 
 const Dashboard = () => {
   const [contacts, setContacts] = useState<string[]>([]);
   const [contactInput, setContactInput] = useState('');
-  const [location, setLocation] = useState<string>('');
+  const [location, setLocation] = useState<{ lat: number; lng: number; text: string } | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -39,7 +38,11 @@ const Dashboard = () => {
         (position) => {
           const { latitude, longitude } = position.coords;
           const locationText = `Lat: ${latitude.toFixed(6)}, Lng: ${longitude.toFixed(6)}`;
-          setLocation(locationText);
+          setLocation({
+            lat: latitude,
+            lng: longitude,
+            text: locationText
+          });
           
           toast({
             title: "🚨 Emergency Alert Sent!",
@@ -57,6 +60,13 @@ const Dashboard = () => {
           setIsGettingLocation(false);
         }
       );
+    }
+  };
+
+  const handleLocationClick = () => {
+    if (location) {
+      const googleMapsUrl = `https://www.google.com/maps?q=${location.lat},${location.lng}`;
+      window.open(googleMapsUrl, '_blank');
     }
   };
 
@@ -149,13 +159,30 @@ const Dashboard = () => {
             
             {location && (
               <div className="mt-4 p-4 bg-red-50 rounded-lg border-l-4 border-red-500 animate-slide-in-right">
-                <div className="flex items-center space-x-2">
-                  <MapPin className="h-5 w-5 text-red-600" />
-                  <h3 className="font-semibold text-red-800">Your Current Location:</h3>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-5 w-5 text-red-600" />
+                    <h3 className="font-semibold text-red-800">Your Current Location:</h3>
+                  </div>
+                  <Button
+                    onClick={handleLocationClick}
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-600 hover:bg-red-100 p-1"
+                    title="View on Map"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
                 </div>
-                <p className="text-red-700 mt-1">{location}</p>
+                <p 
+                  className="text-red-700 mt-1 cursor-pointer underline hover:text-red-800 transition-colors"
+                  onClick={handleLocationClick}
+                  title="Click to view on Google Maps"
+                >
+                  {location.text}
+                </p>
                 <p className="text-sm text-red-600 mt-2">
-                  Share this location with your trusted contacts immediately.
+                  Click the location above to view on Google Maps and share with your trusted contacts.
                 </p>
               </div>
             )}
